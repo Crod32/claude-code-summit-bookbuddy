@@ -1,0 +1,75 @@
+<%- include('header') %>
+
+<div class="book-detail">
+  <div class="book-header">
+    <h1><%= book.title %></h1>
+    <p class="author">by <%= book.author %></p>
+    <% if (book.isbn) { %>
+      <p class="isbn">ISBN: <%= book.isbn %></p>
+    <% } %>
+    <% if (book.description) { %>
+      <p class="description"><%= book.description %></p>
+    <% } %>
+    <% if (rating_info.avg_rating) { %>
+      <p class="rating"><%= rating_info.avg_rating.toFixed(1) %> / 5 (<%= rating_info.review_count %> reviews)</p>
+    <% } %>
+    <div class="book-actions">
+      <a href="/books/<%= book.id %>/edit" class="btn btn-secondary">Edit</a>
+      <form method="POST" action="/books/<%= book.id %>/delete" style="display:inline">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this book?')">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Reviews</h2>
+
+  <% if (reviews.length === 0) { %>
+    <p class="empty">No reviews yet. Be the first!</p>
+  <% } else { %>
+    <div class="reviews">
+      <% reviews.forEach(review => { %>
+        <div class="review-card">
+          <div class="review-header">
+            <strong><%= review.reviewer_name %></strong>
+            <span class="rating"><%= review.rating %> / 5</span>
+          </div>
+          <% if (review.review_text) { %>
+            <p><%= review.review_text %></p>
+          <% } %>
+          <form method="POST" action="/reviews/<%= review.id %>/delete" style="display:inline">
+            <button type="submit" class="btn-small btn-danger">Remove</button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <h3>Add a Review</h3>
+  <form method="POST" action="/reviews" class="review-form">
+    <input type="hidden" name="book_id" value="<%= book.id %>">
+    <div class="form-group">
+      <label for="reviewer_name">Your Name</label>
+      <input type="text" id="reviewer_name" name="reviewer_name" required>
+    </div>
+    <div class="form-group">
+      <label for="rating">Rating</label>
+      <select id="rating" name="rating" required>
+        <option value="">Select...</option>
+        <option value="5">5 - Excellent</option>
+        <option value="4">4 - Good</option>
+        <option value="3">3 - OK</option>
+        <option value="2">2 - Poor</option>
+        <option value="1">1 - Terrible</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="review_text">Review (optional)</label>
+      <textarea id="review_text" name="review_text" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn">Submit Review</button>
+  </form>
+</div>
+
+<%- include('footer') %>

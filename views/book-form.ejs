@@ -1,0 +1,30 @@
+<%- include('header') %>
+
+<h1><%= book ? 'Edit Book' : 'Add a Book' %></h1>
+
+<% if (error) { %>
+  <p class="error"><%= error %></p>
+<% } %>
+
+<form method="POST" action="<%= book ? '/books/' + book.id : '/books' %>" class="book-form">
+  <div class="form-group">
+    <label for="title">Title *</label>
+    <input type="text" id="title" name="title" value="<%= book ? book.title : '' %>" required>
+  </div>
+  <div class="form-group">
+    <label for="author">Author *</label>
+    <input type="text" id="author" name="author" value="<%= book ? book.author : '' %>" required>
+  </div>
+  <div class="form-group">
+    <label for="isbn">ISBN</label>
+    <input type="text" id="isbn" name="isbn" value="<%= book ? (book.isbn || '') : '' %>">
+  </div>
+  <div class="form-group">
+    <label for="description">Description</label>
+    <textarea id="description" name="description" rows="4"><%= book ? (book.description || '') : '' %></textarea>
+  </div>
+  <button type="submit" class="btn"><%= book ? 'Update' : 'Add Book' %></button>
+  <a href="<%= book ? '/books/' + book.id : '/books' %>" class="btn btn-secondary">Cancel</a>
+</form>
+
+<%- include('footer') %>

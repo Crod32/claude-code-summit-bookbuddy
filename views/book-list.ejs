@@ -1,0 +1,26 @@
+<%- include('header') %>
+
+<h1>Books</h1>
+
+<% if (books.length === 0) { %>
+  <p class="empty">No books yet. <a href="/books/new">Add one!</a></p>
+<% } else { %>
+  <div class="book-grid">
+    <% books.forEach(book => { %>
+      <div class="book-card">
+        <h2><a href="/books/<%= book.id %>"><%= book.title %></a></h2>
+        <p class="author">by <%= book.author %></p>
+        <% if (book.avg_rating) { %>
+          <p class="rating"><%= book.avg_rating.toFixed(1) %> / 5 (<%= book.review_count %> reviews)</p>
+        <% } else { %>
+          <p class="rating">No reviews yet</p>
+        <% } %>
+        <% if (book.description) { %>
+          <p class="description"><%= book.description.substring(0, 150) %><%= book.description.length > 150 ? '...' : '' %></p>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('footer') %>
