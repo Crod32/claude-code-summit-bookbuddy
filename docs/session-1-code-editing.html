@@ -1,0 +1,591 @@
+<title>Workshop Script — Code Generation & Editing in Practice</title>
+<style>
+  :root {
+    --ground: #F7F5F0;
+    --text: #1A1D23;
+    --accent: #C45D2C;
+    --blue: #2D5A7B;
+    --muted: #6B6E75;
+    --card: #FFFFFF;
+    --border: #E2DFD8;
+    --code-bg: #EDEAE3;
+    --tip-bg: #FFF8F0;
+    --exercise-bg: #F0F6FA;
+    --pitfall-bg: #FFF0F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--ground);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* Header */
+  .header {
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .header-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-meta {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .header-meta span { margin-right: 1.5rem; }
+
+  /* Overview */
+  .overview {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .overview h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: 70px 1fr 60px;
+    gap: 0.25rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .timeline-time { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .timeline-dur { color: var(--muted); text-align: right; font-size: 0.85rem; }
+
+  /* Segments */
+  .segment {
+    margin-bottom: 2rem;
+    border-left: 3px solid var(--border);
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .segment::before {
+    content: attr(data-time);
+    position: absolute;
+    left: -1.5rem;
+    top: 0;
+    transform: translateX(calc(-100% - 0.75rem));
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .segment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .segment-header:hover .segment-title { color: var(--blue); }
+
+  .segment-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .tag-demo { background: #E8F0E8; color: #2D5F2D; }
+  .tag-exercise { background: var(--exercise-bg); color: var(--blue); }
+  .tag-talk { background: #F0ECE4; color: #5C5440; }
+
+  .segment-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: color 0.15s;
+  }
+
+  .segment-dur {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .segment-body { font-size: 0.92rem; }
+  .segment-body p { margin-bottom: 0.75rem; }
+  .segment-body ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .segment-body li { margin-bottom: 0.35rem; }
+  .segment-body li::marker { color: var(--muted); }
+  .segment-body strong { font-weight: 600; }
+
+  /* Prompt blocks */
+  .prompt {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .prompt-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  /* Callout boxes */
+  .callout {
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.88rem;
+  }
+
+  .callout-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .tip { background: var(--tip-bg); border-left: 3px solid var(--accent); }
+  .tip .callout-label { color: var(--accent); }
+
+  .exercise { background: var(--exercise-bg); border-left: 3px solid var(--blue); }
+  .exercise .callout-label { color: var(--blue); }
+
+  .pitfall { background: var(--pitfall-bg); border-left: 3px solid #C44; }
+  .pitfall .callout-label { color: #C44; }
+
+  /* Repo section */
+  .repo-structure {
+    background: var(--text);
+    color: #D4D0C8;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  .repo-structure .dir { color: #7EB8DA; }
+  .repo-structure .file { color: #D4D0C8; }
+  .repo-structure .comment { color: #6B7D6B; }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .page { padding: 1.25rem 1rem 3rem; }
+    .header h1 { font-size: 1.5rem; }
+    .segment::before { display: none; }
+    .segment { padding-left: 1rem; }
+    .timeline { grid-template-columns: 60px 1fr 50px; font-size: 0.85rem; }
+  }
+
+  /* Print */
+  @media print {
+    .page { max-width: none; padding: 0; }
+    .segment { break-inside: avoid; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="header">
+    <div class="header-eyebrow">Claude Code Summit</div>
+    <h1>Code Generation & Editing in Practice</h1>
+    <div class="header-meta">
+      <span>Tucker Kidd</span>
+      <span>13:00 – 14:00</span>
+      <span>Workshop</span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <div class="overview">
+    <h2>Run of Show</h2>
+    <div class="timeline">
+      <span class="timeline-time">13:00</span><span>Setup & orientation</span><span class="timeline-dur">5 min</span>
+      <span class="timeline-time">13:05</span><span>Demo 1 — Your first multi-file edit</span><span class="timeline-dur">12 min</span>
+      <span class="timeline-time">13:17</span><span>Exercise 1 — Add a feature</span><span class="timeline-dur">8 min</span>
+      <span class="timeline-time">13:25</span><span>Demo 2 — Refactoring across a codebase</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">13:35</span><span>Exercise 2 — Refactor challenge</span><span class="timeline-dur">7 min</span>
+      <span class="timeline-time">13:42</span><span>Demo 3 — Context management</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">13:52</span><span>Common pitfalls & tips</span><span class="timeline-dur">5 min</span>
+      <span class="timeline-time">13:57</span><span>Q&A</span><span class="timeline-dur">3 min</span>
+    </div>
+  </div>
+
+  <!-- TOY REPO -->
+  <div class="segment" data-time="">
+    <div class="segment-header">
+      <span class="segment-title">The Demo Repo: BookBuddy</span>
+    </div>
+    <div class="segment-body">
+      <p>A minimal Express.js book review app. Simple enough to understand in 2 minutes, complex enough for multi-file demos. Pre-planted with refactoring opportunities.</p>
+
+      <div class="repo-structure">
+<span class="dir">bookbuddy/</span>
+├── <span class="file">package.json</span>
+├── <span class="file">server.js</span>              <span class="comment"># Express app entry</span>
+├── <span class="dir">models/</span>
+│   ├── <span class="file">book.js</span>            <span class="comment"># Book schema (title, author, isbn)</span>
+│   └── <span class="file">review.js</span>          <span class="comment"># Review schema (text, rating)</span>
+├── <span class="dir">routes/</span>
+│   ├── <span class="file">books.js</span>           <span class="comment"># CRUD for books</span>
+│   └── <span class="file">reviews.js</span>         <span class="comment"># CRUD for reviews</span>
+├── <span class="dir">views/</span>
+│   ├── <span class="file">layout.ejs</span>         <span class="comment"># Base template</span>
+│   ├── <span class="file">book-list.ejs</span>      <span class="comment"># List page</span>
+│   └── <span class="file">book-detail.ejs</span>    <span class="comment"># Detail + reviews</span>
+├── <span class="dir">public/</span>
+│   └── <span class="file">style.css</span>
+└── <span class="file">seed.js</span>                <span class="comment"># Populate sample data</span>
+      </div>
+
+      <p><strong>Pre-planted issues for demos:</strong></p>
+      <ul>
+        <li>Database queries inlined in route handlers (extractable)</li>
+        <li>Inconsistent error handling (some try/catch, some not)</li>
+        <li>No search or filtering (feature to add)</li>
+        <li>Duplicated validation logic between routes</li>
+        <li>Snake_case in some places, camelCase in others</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-label">Prep note</div>
+        Use SQLite via better-sqlite3 so there's no DB server to set up. Attendees clone, <code>npm install</code>, <code>npm start</code>, done.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 0: SETUP -->
+  <div class="segment" data-time="13:00">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Setup & Orientation</span>
+      <span class="segment-dur">5 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>What to say:</strong> "We're going to spend the next hour doing real work with Claude Code — editing files, adding features, refactoring. By the end you'll have a feel for what it's good at and where to watch out."</p>
+
+      <p><strong>Everyone does:</strong></p>
+      <ul>
+        <li>Clone the BookBuddy repo</li>
+        <li><code>npm install && npm run seed && npm start</code></li>
+        <li>Open <code>http://localhost:3000</code> — see the app running</li>
+        <li>Open a second terminal in the repo directory, run <code>claude</code></li>
+      </ul>
+
+      <p><strong>Sanity check prompt — everyone types this:</strong></p>
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>what does this app do? look at the code and give me a 2-sentence summary</div>
+
+      <p>Point out: Claude read the files, understood the structure, answered in context. That's the baseline — it already knows your code.</p>
+    </div>
+  </div>
+
+  <!-- SEGMENT 1: MULTI-FILE EDIT -->
+  <div class="segment" data-time="13:05">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Your First Multi-File Edit</span>
+      <span class="segment-dur">12 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Setup:</strong> "Let's add a feature that doesn't exist yet — book categories. A book should have a genre, users should be able to filter by genre. Watch how many files Claude touches."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>add a "genre" field to books. it should be a string, one of: fiction, non-fiction, science, history, biography. add a dropdown filter on the book list page so users can filter by genre. update the seed data to include genres.</div>
+
+      <p><strong>What to point out as Claude works:</strong></p>
+      <ul>
+        <li><strong>It reads first.</strong> Watch it read the model, routes, and views before editing anything. "It's building a mental map."</li>
+        <li><strong>It edits multiple files in sequence.</strong> Model → route → view → seed data. "One prompt, four files changed."</li>
+        <li><strong>It maintains consistency.</strong> The genre values in the seed data match the dropdown options. The route handler filters correctly.</li>
+      </ul>
+
+      <p><strong>After it finishes:</strong> Refresh the browser. Show the filter working. "That would've been 15 minutes of jumping between files. Claude did it in one shot because it could see the whole picture."</p>
+
+      <div class="callout tip">
+        <div class="callout-label">Teaching moment</div>
+        If Claude asks a clarifying question ("should genre be required?"), let it happen. Tell the audience: "This is good — it's asking instead of guessing. Answer it and move on."
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCISE 1 -->
+  <div class="segment" data-time="13:17">
+    <div class="segment-header">
+      <span class="segment-tag tag-exercise">Exercise</span>
+      <span class="segment-title">Add a Feature</span>
+      <span class="segment-dur">8 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Your turn. Pick one of these and try it. Don't overthink the prompt — describe what you want like you'd tell a coworker."</p>
+
+      <p><strong>Choose one:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Option A — Search</span>add a search bar to the book list page. users should be able to search by title or author. the search should work as a form submission, not ajax.</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option B — Favorites</span>add a "favorite" button on each book. clicking it should toggle a heart icon. store favorites in a simple array in the session. show a "my favorites" page.</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option C — Star ratings</span>change the review rating from a number input to a 1-5 star display. show the average star rating on the book list page next to each title.</div>
+
+      <p><strong>Walk the room.</strong> Help anyone who's stuck. Common issues: Claude might ask where to put things — tell them to just answer naturally.</p>
+
+      <div class="callout tip">
+        <div class="callout-label">If someone finishes early</div>
+        "Ask Claude to write a test for what you just built."
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 2: REFACTORING -->
+  <div class="segment" data-time="13:25">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Refactoring Across a Codebase</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Setup:</strong> "Now let's clean up. The route files have raw SQL queries mixed in with request handling. Let's extract that."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>the route handlers in routes/books.js and routes/reviews.js have database queries inlined. extract all database operations into a db/ directory with separate files for book queries and review queries. the routes should import and call those functions instead.</div>
+
+      <p><strong>What to point out:</strong></p>
+      <ul>
+        <li><strong>It creates new files and updates existing ones.</strong> New <code>db/books.js</code> and <code>db/reviews.js</code>, modified route files.</li>
+        <li><strong>It names things sensibly.</strong> Functions like <code>getBookById</code>, <code>getAllBooks</code> — matches the pattern.</li>
+        <li><strong>The app still works.</strong> Refresh the browser. Same behavior, cleaner code.</li>
+      </ul>
+
+      <p><strong>Follow-up — show a rename refactor:</strong></p>
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>there's inconsistent naming in the codebase — some variables use snake_case and some use camelCase. normalize everything to camelCase.</div>
+
+      <p>"This is the kind of tedious refactoring that takes 30 minutes of find-and-replace. Claude does it in seconds and catches the edge cases you'd miss."</p>
+
+      <div class="callout pitfall">
+        <div class="callout-label">Pitfall to demo</div>
+        If the codebase is small, Claude will do this perfectly. In a large codebase, it might miss some files. That's a real limitation — always verify refactors. Show <code>grep -r "snake_case_pattern" .</code> to check.
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCISE 2 -->
+  <div class="segment" data-time="13:35">
+    <div class="segment-header">
+      <span class="segment-tag tag-exercise">Exercise</span>
+      <span class="segment-title">Refactor Challenge</span>
+      <span class="segment-dur">7 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Try a refactor. Here are two options — or come up with your own."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Option A — Error handling</span>the error handling in the routes is inconsistent. some handlers have try/catch, some don't. add consistent error handling to all route handlers — if a database operation fails, return a 500 with a user-friendly error page.</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option B — Validation</span>there's duplicated validation logic in the book and review routes. extract a shared validation middleware that both routes can use.</div>
+
+      <p><strong>Key observation to share after:</strong> "Notice how the prompt didn't say <em>which</em> files to change or <em>how</em> to structure it. You described the outcome, Claude figured out the implementation. That's the sweet spot."</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 3: CONTEXT MANAGEMENT -->
+  <div class="segment" data-time="13:42">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Context Management</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Setup:</strong> "By now Claude has read a bunch of files and made several edits. Your conversation is getting long. Let's talk about what happens and what to do about it."</p>
+
+      <p><strong>Show the context indicator:</strong> Point out the token usage in the status bar. "This number is how much of Claude's memory you've used. When it fills up, older parts of the conversation get compressed."</p>
+
+      <p><strong>Demo: /compact</strong></p>
+      <div class="prompt">
+        <span class="prompt-label">Type in Claude Code</span>/compact</div>
+      <p>"This compresses the conversation so far into a summary. Use it when you're switching to a new task or when things feel sluggish. It's like clearing your desk between tasks."</p>
+
+      <p><strong>Demo: CLAUDE.md</strong></p>
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>/init</div>
+      <p>"CLAUDE.md is a file in your repo that Claude reads at the start of every conversation. Put your project conventions, architecture decisions, and 'don't do this' rules in here. It's persistent context — survives across sessions."</p>
+
+      <p><strong>Show a practical example:</strong></p>
+      <div class="prompt">
+        <span class="prompt-label">Example CLAUDE.md content</span># BookBuddy
+
+Express.js app with EJS templates and SQLite.
+
+## Conventions
+- All database queries go in db/ directory
+- Use camelCase everywhere
+- Error responses use the error.ejs template
+- Don't add new npm dependencies without asking</div>
+
+      <p>"Now every time Claude works on this project, it knows the rules without you repeating them."</p>
+
+      <p><strong>Demo: Breaking up big tasks</strong></p>
+      <p>"If you ask Claude to 'add a full user authentication system with OAuth, roles, permissions, and an admin panel,' it'll try to do it all at once and probably get confused. Instead:"</p>
+      <div class="prompt">
+        <span class="prompt-label">Better approach</span>let's add user auth. start with just the basics: a users table, a registration form, and a login form with session-based auth. no OAuth, no roles yet — just email and password.</div>
+      <p>"Small, concrete tasks. You can always ask for the next piece after."</p>
+
+      <div class="callout tip">
+        <div class="callout-label">Rule of thumb</div>
+        If your prompt is more than 3-4 sentences, you're probably asking for too much at once. Break it up.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 4: PITFALLS -->
+  <div class="segment" data-time="13:52">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Common Pitfalls</span>
+      <span class="segment-dur">5 min</span>
+    </div>
+    <div class="segment-body">
+
+      <div class="callout pitfall">
+        <div class="callout-label">Pitfall 1 — The essay prompt</div>
+        "I want you to add a search feature. The search should support full-text search across title and author fields. It should be case-insensitive. The results should be paginated with 10 results per page. The search bar should have autocomplete. Use debouncing on the input..."
+        <br><br>
+        <strong>Better:</strong> "add search to the book list — search by title or author." Start simple. Add requirements after you see the first result.
+      </div>
+
+      <div class="callout pitfall">
+        <div class="callout-label">Pitfall 2 — Not verifying</div>
+        Claude says it's done. The code looks right. But did you actually run it? <strong>Always test.</strong> Refresh the browser, click the thing, check the edge cases. Claude is confident even when it's wrong.
+      </div>
+
+      <div class="callout pitfall">
+        <div class="callout-label">Pitfall 3 — The gold-plating spiral</div>
+        You ask for a simple feature. Claude adds error handling, input validation, loading states, accessibility attributes, and a test suite. Sometimes that's great. Sometimes you just wanted a button. If Claude over-builds, tell it: "simpler — I just need X."
+      </div>
+
+      <div class="callout pitfall">
+        <div class="callout-label">Pitfall 4 — The "just fix it" loop</div>
+        Something breaks. You say "fix it." Claude changes something. Still broken. "Fix it." Another change. Worse now. <strong>Stop and describe the actual problem:</strong> "when I click submit, I get a 500 error. The console says 'Cannot read property id of undefined' on line 34 of routes/books.js."
+      </div>
+
+      <p><strong>Summary slide:</strong></p>
+      <ul>
+        <li>Describe outcomes, not implementations</li>
+        <li>Start small, iterate</li>
+        <li>Always verify in the browser / terminal</li>
+        <li>Use /compact between tasks</li>
+        <li>Put project conventions in CLAUDE.md</li>
+        <li>When stuck, give Claude the error message, not "fix it"</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Q&A -->
+  <div class="segment" data-time="13:57">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Q&A</span>
+      <span class="segment-dur">3 min</span>
+    </div>
+    <div class="segment-body">
+      <p>Open floor. Common questions to have answers ready for:</p>
+      <ul>
+        <li><strong>"Does it work with [language/framework]?"</strong> — Yes, it works with anything. It's especially strong with well-documented languages and frameworks.</li>
+        <li><strong>"Can it access the internet / APIs?"</strong> — Not by default. It works with your local files. You can add MCP servers for external integrations.</li>
+        <li><strong>"Is my code sent to Anthropic?"</strong> — Yes, the code it reads is sent to the API. Check your company's policy. The API doesn't train on your data.</li>
+        <li><strong>"How is this different from Copilot?"</strong> — Copilot autocompletes as you type. Claude Code works at a higher level — you describe what you want, it plans and executes across files.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- PREP CHECKLIST -->
+  <div class="overview">
+    <h2>Pre-Workshop Checklist</h2>
+    <div style="font-size: 0.92rem;">
+      <ul style="padding-left: 1.25rem;">
+        <li>BookBuddy repo created and published (GitHub/internal)</li>
+        <li>Repo README has one-command setup: <code>npm install && npm run seed && npm start</code></li>
+        <li>Tested on a clean machine — no hidden dependencies</li>
+        <li>Pre-planted issues verified (inline queries, inconsistent naming, missing error handling)</li>
+        <li>Run through each demo prompt yourself at least once</li>
+        <li>Backup plan: if someone can't install, pair them with a neighbor</li>
+        <li>Have the app running on your screen before attendees arrive</li>
+        <li>Second terminal open with <code>claude</code> ready</li>
+      </ul>
+    </div>
+  </div>
+
+</div>

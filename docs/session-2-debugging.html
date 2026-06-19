@@ -1,0 +1,550 @@
+<title>Demo Script — Debugging, Testing & Code Review</title>
+<style>
+  :root {
+    --ground: #F7F5F0;
+    --text: #1A1D23;
+    --accent: #C45D2C;
+    --blue: #2D5A7B;
+    --muted: #6B6E75;
+    --card: #FFFFFF;
+    --border: #E2DFD8;
+    --code-bg: #EDEAE3;
+    --tip-bg: #FFF8F0;
+    --exercise-bg: #F0F6FA;
+    --pitfall-bg: #FFF0F0;
+    --green-bg: #F0F8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--ground);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .header {
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .header-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-meta {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .header-meta span { margin-right: 1.5rem; }
+
+  .overview {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .overview h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: 70px 1fr 60px;
+    gap: 0.25rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .timeline-time { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .timeline-dur { color: var(--muted); text-align: right; font-size: 0.85rem; }
+
+  .segment {
+    margin-bottom: 2rem;
+    border-left: 3px solid var(--border);
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .segment::before {
+    content: attr(data-time);
+    position: absolute;
+    left: -1.5rem;
+    top: 0;
+    transform: translateX(calc(-100% - 0.75rem));
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .segment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .segment-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .tag-demo { background: #E8F0E8; color: #2D5F2D; }
+  .tag-talk { background: #F0ECE4; color: #5C5440; }
+  .tag-setup { background: #F0E8F0; color: #5C405C; }
+
+  .segment-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .segment-dur {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .segment-body { font-size: 0.92rem; }
+  .segment-body p { margin-bottom: 0.75rem; }
+  .segment-body ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .segment-body li { margin-bottom: 0.35rem; }
+  .segment-body li::marker { color: var(--muted); }
+  .segment-body strong { font-weight: 600; }
+
+  .prompt {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .prompt-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .callout {
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.88rem;
+  }
+
+  .callout-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .tip { background: var(--tip-bg); border-left: 3px solid var(--accent); }
+  .tip .callout-label { color: var(--accent); }
+
+  .pitfall { background: var(--pitfall-bg); border-left: 3px solid #C44; }
+  .pitfall .callout-label { color: #C44; }
+
+  .reveal { background: var(--green-bg); border-left: 3px solid #2D7D2D; }
+  .reveal .callout-label { color: #2D7D2D; }
+
+  .bug-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+  }
+
+  .bug-card h4 {
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+    color: var(--blue);
+  }
+
+  .bug-card code {
+    background: var(--code-bg);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  @media (max-width: 700px) {
+    .page { padding: 1.25rem 1rem 3rem; }
+    .header h1 { font-size: 1.5rem; }
+    .segment::before { display: none; }
+    .segment { padding-left: 1rem; }
+    .timeline { grid-template-columns: 60px 1fr 50px; font-size: 0.85rem; }
+  }
+
+  @media print {
+    .page { max-width: none; padding: 0; }
+    .segment { break-inside: avoid; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="header">
+    <div class="header-eyebrow">Claude Code Summit</div>
+    <h1>Debugging, Testing & Code Review</h1>
+    <div class="header-meta">
+      <span>Tucker Kidd</span>
+      <span>14:00 – 14:45</span>
+      <span>Live Demo</span>
+    </div>
+  </header>
+
+  <div class="overview">
+    <h2>Run of Show</h2>
+    <div class="timeline">
+      <span class="timeline-time">14:00</span><span>Setup — switch to the buggy branch</span><span class="timeline-dur">2 min</span>
+      <span class="timeline-time">14:02</span><span>Act 1 — Debugging: find three planted bugs</span><span class="timeline-dur">15 min</span>
+      <span class="timeline-time">14:17</span><span>Act 2 — Testing: write tests from scratch</span><span class="timeline-dur">13 min</span>
+      <span class="timeline-time">14:30</span><span>Act 3 — Code review: review a PR with issues</span><span class="timeline-dur">12 min</span>
+      <span class="timeline-time">14:42</span><span>Wrap-up & takeaways</span><span class="timeline-dur">3 min</span>
+    </div>
+  </div>
+
+  <!-- PLANTED BUGS CHEAT SHEET -->
+  <div class="overview">
+    <h2>Cheat Sheet — Planted Bugs on demo/bugs branch</h2>
+    <p style="font-size:0.88rem; color: var(--muted); margin-bottom: 1rem;">Three bugs, each a different class. You know them; the audience doesn't.</p>
+
+    <div class="bug-card">
+      <h4>Bug 1 — Off-by-one in rating validation</h4>
+      <p><code>routes/reviews.js:15</code> — <code>rating >= 5</code> should be <code>rating > 5</code></p>
+      <p>Effect: Users can't submit 5-star reviews. The "Excellent" option is silently rejected. Subtle — the form looks like it works for 1-4 stars.</p>
+    </div>
+
+    <div class="bug-card">
+      <h4>Bug 2 — Swapped parameters in UPDATE query</h4>
+      <p><code>routes/books.js:85</code> — <code>description</code> and <code>isbn</code> arguments are swapped in <code>.run()</code></p>
+      <p>Effect: Editing a book silently puts the description in the ISBN field and vice versa. Data corruption that looks fine at first glance.</p>
+    </div>
+
+    <div class="bug-card">
+      <h4>Bug 3 — Wrong sort order on book list</h4>
+      <p><code>routes/books.js:6</code> — <code>ORDER BY title DESC</code> instead of <code>ORDER BY created_at DESC</code></p>
+      <p>Effect: Book list sorts by title instead of newest-first. Not a crash, but a behavior regression — the commit message says "add sorting" which masks it.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SETUP -->
+  <div class="segment" data-time="14:00">
+    <div class="segment-header">
+      <span class="segment-tag tag-setup">Setup</span>
+      <span class="segment-title">Set the Stage</span>
+      <span class="segment-dur">2 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "This is the same BookBuddy app from the last session. A teammate pushed some changes — let's see what happened."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Terminal</span>git checkout demo/bugs
+npm run seed
+npm start</div>
+
+      <p>Open the app in the browser. Point at the book list. "Looks fine, right? We got a bug report from a user: they can't submit a 5-star review. Let's find out why."</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ACT 1: DEBUGGING -->
+  <div class="segment" data-time="14:02">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Act 1 — Debugging</span>
+      <span class="segment-dur">15 min</span>
+    </div>
+    <div class="segment-body">
+
+      <p><strong>Bug 1: The 5-star problem (5 min)</strong></p>
+      <p>Show the bug live first — go to a book, try to submit a review with rating 5. It fails with "Rating must be between 1 and 5." Rating 4 works fine.</p>
+
+      <p>"Let's ask Claude to figure this out."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>users are reporting they can't submit 5-star reviews. when they select "5 - Excellent" and submit, they get "Rating must be between 1 and 5". ratings 1-4 work fine. find the bug.</div>
+
+      <p><strong>What Claude will do:</strong> Read the review route, spot <code>rating >= 5</code>, explain the off-by-one, and fix it to <code>rating > 5</code>.</p>
+
+      <p><strong>Point out:</strong> "I gave Claude the symptom, not the file. I said 'users can't submit 5-star reviews' — not 'check line 15 of reviews.js.' Describe the problem, let Claude find the code."</p>
+
+      <div class="callout tip">
+        <div class="callout-label">Teaching moment</div>
+        "Notice it read the route file, found the validation line, and explained WHY it's wrong — not just WHAT to change. That explanation is the value. A find-and-replace could change the character, but Claude tells you the logic error."
+      </div>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Bug 2: The data corruption (5 min)</strong></p>
+      <p>"Let's try something harder. I edited a book earlier and something weird happened." Go to a book, click Edit, change the description, save. Go back — the ISBN and description are swapped.</p>
+
+      <p>"Hmm. Let me show Claude what I'm seeing."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>something weird is happening with book editing. I edited the description of a book and saved it. now the ISBN field shows what used to be the description, and the description shows the ISBN. the data seems to be getting swapped somehow. look at the update route.</div>
+
+      <p><strong>What Claude will do:</strong> Read the update route, compare the SQL column order to the <code>.run()</code> parameter order, and spot the swap.</p>
+
+      <p><strong>Point out:</strong> "This is a class of bug that's really hard to spot in a code review — the line looks correct at a glance. The column names and the variable names don't match up in the argument list. Claude caught it because it actually traced the data flow."</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Bug 3: The behavioral regression (5 min)</strong></p>
+      <p>"One more. A teammate says the book list used to show newest books first, now it doesn't. Let's see what changed."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>the book list page is supposed to show the most recently added books first, but it's not doing that anymore. something changed. can you check the git history for the book list route and figure out what happened?</div>
+
+      <p><strong>What Claude will do:</strong> Run <code>git log</code> / <code>git diff</code> on the route file, find the ORDER BY change, and explain the regression.</p>
+
+      <p><strong>Point out:</strong> "I told Claude to check the git history. That's a key move — when something 'used to work,' the answer is usually in a recent commit. Claude can read diffs and correlate them with behavior changes."</p>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key takeaway</div>
+        Three different debugging strategies: (1) give the symptom, let Claude find the cause; (2) describe the unexpected behavior, point at the area; (3) ask Claude to investigate the git history. All three start with WHAT'S WRONG, not WHERE TO LOOK.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ACT 2: TESTING -->
+  <div class="segment" data-time="14:17">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Act 2 — Testing</span>
+      <span class="segment-dur">13 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "We found and fixed three bugs. None of them had tests. Let's fix that — and let's have Claude write the tests."</p>
+
+      <p><strong>Step 1 — Write tests for the bug we just fixed (5 min)</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>write tests for the review submission route. cover: valid review (rating 1-5), rejected if rating is out of range, rejected if reviewer name is empty. use the built-in node test runner, no external test frameworks.</div>
+
+      <p><strong>What to point out as Claude works:</strong></p>
+      <ul>
+        <li>"I said 'no external test frameworks' — Node has a built-in test runner since v18. Claude respects the constraint."</li>
+        <li>"It's setting up the database, seeding test data, and tearing it down. It wrote the scaffolding we didn't want to write."</li>
+        <li>"Look at the test for rating 5 — that's a regression test. If someone reintroduces the off-by-one, this catches it."</li>
+      </ul>
+
+      <p><strong>Run the tests live:</strong></p>
+      <div class="prompt">
+        <span class="prompt-label">Terminal</span>node --test</div>
+
+      <p>Show them passing. "We went from zero tests to a safety net in under two minutes."</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 2 — Ask for broader coverage (5 min)</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>now write tests for the book routes — cover creating a book, creating with missing title (should fail), the book detail page returning reviews, and deleting a book also deleting its reviews.</div>
+
+      <p><strong>Point out:</strong> "I described the test SCENARIOS, not the implementation. 'Creating with missing title should fail' — Claude figures out the assertion."</p>
+
+      <p>Run the tests again. Show the full suite passing.</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 3 — Show the "write a test that fails" trick (3 min)</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>write a test that verifies the book update route puts the ISBN in the isbn column and the description in the description column (not swapped). run it against the current code.</div>
+
+      <p>"If we hadn't fixed Bug 2 yet, this test would fail. That's how you use tests to PROVE a bug exists before fixing it. Write the test, see it fail, fix the code, see it pass."</p>
+
+      <div class="callout tip">
+        <div class="callout-label">Teaching moment</div>
+        "The hardest part of writing tests is knowing WHAT to test. You already know that — you just described the behavior. Let Claude handle the HOW."
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ACT 3: CODE REVIEW -->
+  <div class="segment" data-time="14:30">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Act 3 — Code Review</span>
+      <span class="segment-dur">12 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Last act. A teammate submitted a PR to add sorting to the book list. Let's review it with Claude."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Terminal</span>git diff main..demo/pr-review</div>
+
+      <p>Show the diff on screen briefly. "Looks reasonable — sort controls, a few query params. Let's see what Claude thinks."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>review the diff between main and demo/pr-review. look for bugs, security issues, and anything you'd flag in a code review.</div>
+
+      <p><strong>What Claude should find:</strong></p>
+      <ul>
+        <li><strong>SQL injection</strong> — <code>${sort}</code> and <code>${order}</code> are interpolated directly from <code>req.query</code> into the SQL string. An attacker can pass arbitrary SQL via the URL. This is the big one.</li>
+        <li><strong>No input validation</strong> — <code>sort</code> and <code>order</code> accept any string. Should be allowlisted to valid column names and ASC/DESC.</li>
+        <li><strong>No tests</strong> — new feature with no test coverage.</li>
+      </ul>
+
+      <div class="callout pitfall">
+        <div class="callout-label">The SQL injection moment</div>
+        Pause on this one. "This is a real security vulnerability. The sort parameter goes straight into the query. Someone could visit <code>/books?sort=title;DROP TABLE books--</code>. In a real app, this is a CVE." Show the audience the vulnerable line. Let it sink in.
+      </div>
+
+      <p><strong>Ask Claude to fix it:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>fix the SQL injection in the sort feature. allowlist the valid sort columns and only accept ASC or DESC for the order.</div>
+
+      <p><strong>What Claude will do:</strong> Add a whitelist of valid columns, validate the order param, and use parameterized queries or string matching instead of interpolation.</p>
+
+      <p><strong>Point out:</strong></p>
+      <ul>
+        <li>"Claude didn't just find the bug — it explained the attack vector. That context is what makes this more useful than a linter."</li>
+        <li>"The fix is an allowlist, not a blocklist. Claude chose the right security pattern."</li>
+        <li>"In a real workflow, you'd run <code>/review</code> on a PR branch and get this kind of feedback before merge."</li>
+      </ul>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key takeaway</div>
+        Claude Code review catches things at different altitudes: logic errors (the off-by-one), security vulnerabilities (SQL injection), missing practices (no tests). It's not replacing human review — it's a first pass that catches the things humans skim past.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- WRAP-UP -->
+  <div class="segment" data-time="14:42">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Wrap-up</span>
+      <span class="segment-dur">3 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Debugging:</strong></p>
+      <ul>
+        <li>Describe the symptom, not the location</li>
+        <li>When something "used to work" — ask Claude to check git history</li>
+        <li>Claude traces data flow, which catches bugs that look correct at a glance</li>
+      </ul>
+
+      <p><strong>Testing:</strong></p>
+      <ul>
+        <li>Describe the scenarios, let Claude write the implementation</li>
+        <li>"Write a test that fails" is a powerful pattern for proving bugs</li>
+        <li>Going from zero to a test suite takes minutes, not hours</li>
+      </ul>
+
+      <p><strong>Code review:</strong></p>
+      <ul>
+        <li>Claude catches security issues, logic errors, and missing practices in one pass</li>
+        <li>It explains the WHY — not just "this line is wrong" but "here's the attack vector"</li>
+        <li>Use it as a first pass before human review, not a replacement for it</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- PREP CHECKLIST -->
+  <div class="overview">
+    <h2>Pre-Demo Checklist</h2>
+    <div style="font-size: 0.92rem;">
+      <ul style="padding-left: 1.25rem;">
+        <li>BookBuddy repo has both branches: <code>demo/bugs</code> and <code>demo/pr-review</code></li>
+        <li><code>demo/bugs</code> has all three planted bugs (rating >=5, swapped params, wrong ORDER BY)</li>
+        <li><code>demo/pr-review</code> has the SQL injection sort feature</li>
+        <li>Run through each prompt yourself — Claude's exact phrasing varies, but it consistently finds all three bugs and the injection</li>
+        <li>Have <code>npm run seed</code> ready — fresh data makes the demos cleaner</li>
+        <li>Browser open to the book list, Claude Code open in terminal</li>
+        <li>If short on time, cut Bug 3 (git history) — it's the least dramatic</li>
+        <li>If long on time, expand the testing section — ask Claude to add edge case tests</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- BRANCH REFERENCE -->
+  <div class="overview">
+    <h2>Branch Reference</h2>
+    <div style="font-size: 0.92rem;">
+      <table style="width:100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600;">main</td>
+          <td style="padding: 0.5rem 0;">Clean app, no bugs, no tests</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600;">demo/bugs</td>
+          <td style="padding: 0.5rem 0;">3 planted bugs for Act 1 (debugging) and Act 2 (testing)</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem 0; font-weight: 600;">demo/pr-review</td>
+          <td style="padding: 0.5rem 0;">Sort feature with SQL injection for Act 3 (code review)</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
