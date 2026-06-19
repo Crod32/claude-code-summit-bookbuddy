@@ -1,0 +1,820 @@
+<title>Workshop Script — Commands, Skills, and Hooks</title>
+<style>
+  :root {
+    --ground: #F7F5F0;
+    --text: #1A1D23;
+    --accent: #C45D2C;
+    --blue: #2D5A7B;
+    --muted: #6B6E75;
+    --card: #FFFFFF;
+    --border: #E2DFD8;
+    --code-bg: #EDEAE3;
+    --tip-bg: #FFF8F0;
+    --exercise-bg: #F0F6FA;
+    --pitfall-bg: #FFF0F0;
+    --green-bg: #F0F8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--ground);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .header {
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .header-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-meta {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .header-meta span { margin-right: 1.5rem; }
+
+  .overview {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .overview h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: 70px 1fr 60px;
+    gap: 0.25rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .timeline-time { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .timeline-dur { color: var(--muted); text-align: right; font-size: 0.85rem; }
+
+  .segment {
+    margin-bottom: 2rem;
+    border-left: 3px solid var(--border);
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .segment::before {
+    content: attr(data-time);
+    position: absolute;
+    left: -1.5rem;
+    top: 0;
+    transform: translateX(calc(-100% - 0.75rem));
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .segment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .segment-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .tag-demo { background: #E8F0E8; color: #2D5F2D; }
+  .tag-exercise { background: var(--exercise-bg); color: var(--blue); }
+  .tag-talk { background: #F0ECE4; color: #5C5440; }
+
+  .segment-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .segment-dur {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .segment-body { font-size: 0.92rem; }
+  .segment-body p { margin-bottom: 0.75rem; }
+  .segment-body ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .segment-body li { margin-bottom: 0.35rem; }
+  .segment-body li::marker { color: var(--muted); }
+  .segment-body strong { font-weight: 600; }
+
+  .prompt {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .prompt-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .callout {
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.88rem;
+  }
+
+  .callout-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .tip { background: var(--tip-bg); border-left: 3px solid var(--accent); }
+  .tip .callout-label { color: var(--accent); }
+
+  .pitfall { background: var(--pitfall-bg); border-left: 3px solid #C44; }
+  .pitfall .callout-label { color: #C44; }
+
+  .reveal { background: var(--green-bg); border-left: 3px solid #2D7D2D; }
+  .reveal .callout-label { color: #2D7D2D; }
+
+  .file-card {
+    background: var(--text);
+    color: #D4D0C8;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  .file-card .path { color: #7EB8DA; }
+  .file-card .comment { color: #6B7D6B; }
+  .file-card .key { color: #C9A06C; }
+  .file-card .string { color: #98C379; }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .concept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .concept-card h4 {
+    font-size: 0.9rem;
+    color: var(--blue);
+    margin-bottom: 0.35rem;
+  }
+
+  .concept-card p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  @media (max-width: 700px) {
+    .page { padding: 1.25rem 1rem 3rem; }
+    .header h1 { font-size: 1.5rem; }
+    .segment::before { display: none; }
+    .segment { padding-left: 1rem; }
+    .timeline { grid-template-columns: 60px 1fr 50px; font-size: 0.85rem; }
+    .concept-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .page { max-width: none; padding: 0; }
+    .segment { break-inside: avoid; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="header">
+    <div class="header-eyebrow">Claude Code Summit</div>
+    <h1>Commands, Skills, and Hooks</h1>
+    <div class="header-meta">
+      <span>Tucker Kidd</span>
+      <span>15:00 – 16:00</span>
+      <span>Workshop</span>
+    </div>
+  </header>
+
+  <!-- BIG PICTURE -->
+  <div class="overview">
+    <h2>The Three Customization Layers</h2>
+    <div class="concept-grid">
+      <div class="concept-card">
+        <h4>Commands</h4>
+        <p>Reusable prompts you invoke with <code>/name</code>. Like shell aliases for Claude. Live in <code>.claude/commands/</code>.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Skills</h4>
+        <p>Persistent context Claude reads automatically when relevant. Your project's rules and patterns. Live in <code>.claude/skills/</code>.</p>
+      </div>
+      <div class="concept-card">
+        <h4>Hooks</h4>
+        <p>Shell commands that fire on events (file edited, tool called). Automated guardrails. Live in <code>.claude/settings.json</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RUN OF SHOW -->
+  <div class="overview">
+    <h2>Run of Show</h2>
+    <div class="timeline">
+      <span class="timeline-time">15:00</span><span>The mental model — what, where, why</span><span class="timeline-dur">5 min</span>
+      <span class="timeline-time">15:05</span><span>Demo 1 — Build a slash command from scratch</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">15:15</span><span>Exercise 1 — Write your own command</span><span class="timeline-dur">8 min</span>
+      <span class="timeline-time">15:23</span><span>Demo 2 — Skills: teaching Claude your project's rules</span><span class="timeline-dur">12 min</span>
+      <span class="timeline-time">15:35</span><span>Exercise 2 — Write a skill</span><span class="timeline-dur">7 min</span>
+      <span class="timeline-time">15:42</span><span>Demo 3 — Hooks: automated guardrails</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">15:52</span><span>Putting it all together</span><span class="timeline-dur">5 min</span>
+      <span class="timeline-time">15:57</span><span>Q&A</span><span class="timeline-dur">3 min</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 0: MENTAL MODEL -->
+  <div class="segment" data-time="15:00">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">The Mental Model</span>
+      <span class="segment-dur">5 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "In the earlier sessions you typed prompts from scratch every time. That works, but you end up repeating yourself — same instructions, same conventions, same checks. This session is about making Claude remember your workflow."</p>
+
+      <p><strong>The three layers, one sentence each:</strong></p>
+      <ul>
+        <li><strong>Commands</strong> — "Do this thing I keep asking for." A saved prompt you trigger with a slash.</li>
+        <li><strong>Skills</strong> — "Here are the rules." Context Claude reads automatically so you don't have to repeat your standards.</li>
+        <li><strong>Hooks</strong> — "Run this check every time." Shell commands that fire on events, no human in the loop.</li>
+      </ul>
+
+      <p><strong>Where they live:</strong></p>
+      <div class="file-card">
+<span class="path">.claude/</span>
+├── <span class="path">commands/</span>       <span class="comment"># markdown files → /command-name</span>
+│   ├── add-route.md
+│   └── preflight.md
+├── <span class="path">skills/</span>         <span class="comment"># markdown files → auto-loaded context</span>
+│   ├── coding-standards.md
+│   └── security-checklist.md
+└── <span class="path">settings.json</span>   <span class="comment"># hooks config</span>
+      </div>
+
+      <p>"All three are just files in your repo. They get committed, shared with your team, and versioned like any other code. That's the key insight — your Claude workflow is codified, not tribal knowledge."</p>
+
+      <div class="callout tip">
+        <div class="callout-label">Framing</div>
+        "Think of it like this: CLAUDE.md is your project README for Claude. Commands are your shell aliases. Skills are your team's style guide. Hooks are your CI checks, but local."
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 1: COMMANDS -->
+  <div class="segment" data-time="15:05">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Build a Slash Command</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Let's build a command from scratch. I find myself constantly asking Claude to explain how a request flows through the app. Let's turn that into a one-word command."</p>
+
+      <p><strong>Step 1 — Create the file (do this live in the terminal, not in Claude):</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Terminal</span>mkdir -p .claude/commands</div>
+
+      <p>Now create the command file. Open it in an editor or use Claude:</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>create a file at .claude/commands/explain.md with this content:
+
+Explain how the request lifecycle works for $ARGUMENTS.
+
+Trace the full path from the HTTP request to the response:
+1. Which route file handles it?
+2. What middleware runs?
+3. What database queries execute?
+4. Which view template renders?
+5. What data gets passed to the template?
+
+Keep it concise — one paragraph per step. Use actual file paths and line numbers.</div>
+
+      <p><strong>Point out two things:</strong></p>
+      <ul>
+        <li>"The file name becomes the command name. <code>explain.md</code> → <code>/explain</code>."</li>
+        <li>"<code>$ARGUMENTS</code> is a placeholder — whatever you type after the command gets inserted there."</li>
+      </ul>
+
+      <p><strong>Step 2 — Use it:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Type in Claude Code</span>/explain GET /books/3</div>
+
+      <p>Claude traces the full request path — route file, query, view template, data passed. "One slash command instead of typing that whole instruction every time."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Try another</span>/explain POST /reviews</div>
+
+      <p>"Same command, different input. It adapts."</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 3 — Build a more practical command: /preflight</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">File: .claude/commands/preflight.md</span>Run the pre-commit checklist before I commit:
+
+1. Run the test suite with `node --test` and report any failures
+2. Check for console.log statements that look like debugging leftovers (not the server startup log)
+3. Grep for TODO or FIXME comments and list them
+4. Run `git diff --staged` and summarize what's about to be committed
+5. If everything passes, say "Ready to commit." If not, list what needs fixing.</div>
+
+      <p>Create it live, then run it:</p>
+      <div class="prompt">
+        <span class="prompt-label">Type in Claude Code</span>/preflight</div>
+
+      <p>"This is a workflow in a file. Your team can share it. New developers get the same pre-commit checks on day one."</p>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key idea</div>
+        Commands are prompts you've promoted from one-off to reusable. If you've typed the same kind of instruction three times, it should be a command.
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCISE 1 -->
+  <div class="segment" data-time="15:15">
+    <div class="segment-header">
+      <span class="segment-tag tag-exercise">Exercise</span>
+      <span class="segment-title">Write Your Own Command</span>
+      <span class="segment-dur">8 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Your turn. Create a command and use it. Here are some ideas, or make up your own."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Option A — /add-route</span>Create .claude/commands/add-route.md
+
+Add a new Express route to BookBuddy.
+Create a route file at routes/$ARGUMENTS.js with CRUD handlers
+(GET list, GET detail, POST create, POST delete).
+Register it in server.js. Create a basic list view.</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option B — /summarize</span>Create .claude/commands/summarize.md
+
+Give me a summary of $ARGUMENTS.
+Read the file, then explain:
+- What it does (one sentence)
+- Its public API (functions/routes it exports)
+- What depends on it and what it depends on
+- Any code smells or issues you notice</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option C — /changelog</span>Create .claude/commands/changelog.md
+
+Generate a changelog entry for the recent changes.
+Run git log --oneline -10 and summarize the changes
+in a user-friendly format with sections for
+Added, Changed, and Fixed.</div>
+
+      <p><strong>After they create it:</strong> "Now use it. Type <code>/your-command</code> and see it work."</p>
+
+      <div class="callout tip">
+        <div class="callout-label">Common question</div>
+        "Can I use Claude to write the command?" Yes! "Create a command at .claude/commands/my-thing.md that does X" works great. Commands are just markdown files.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 2: SKILLS -->
+  <div class="segment" data-time="15:23">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Skills: Teaching Claude Your Rules</span>
+      <span class="segment-dur">12 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Commands are things you trigger. Skills are things Claude knows. They're context that Claude reads automatically when it's relevant — your project's coding standards, security rules, architectural decisions."</p>
+
+      <p><strong>The difference:</strong></p>
+      <ul>
+        <li>CLAUDE.md — loaded every conversation, every time. Put universal rules here.</li>
+        <li>Skills — loaded when relevant. Claude reads the <code>description</code> field to decide if it applies. Put topic-specific guidance here.</li>
+      </ul>
+
+      <p><strong>Step 1 — Create a coding standards skill:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>create a file at .claude/skills/coding-standards.md with this content. make sure to include the frontmatter:</div>
+
+      <div class="file-card">
+<span class="comment">---</span>
+<span class="key">description</span>: <span class="string">BookBuddy coding standards and conventions</span>
+<span class="comment">---</span>
+
+<span class="comment"># BookBuddy Coding Standards</span>
+
+<span class="comment">## Naming</span>
+- Use camelCase for all JavaScript variables and functions
+- Use kebab-case for file names and URL paths
+- Database columns use snake_case (SQLite convention)
+
+<span class="comment">## Routes</span>
+- Each resource gets its own file in routes/
+- Route handlers must have try/catch with a 500 response on error
+- Validation happens at the top of each handler before any DB calls
+- Use parameterized queries (?) — never interpolate user input
+
+<span class="comment">## Testing</span>
+- Use the built-in Node.js test runner (node:test)
+- No external test frameworks
+- Test files go in tests/ with the pattern *.test.js
+      </div>
+
+      <p><strong>Point out:</strong> "The <code>description</code> in the frontmatter is what Claude uses to decide if this skill is relevant. When you ask it to write a route handler, it'll see 'coding standards and conventions' and load the file."</p>
+
+      <p><strong>Step 2 — Test that it works:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>add a new route for managing reading lists. a reading list has a name and a list of book IDs.</div>
+
+      <p><strong>What to point out:</strong></p>
+      <ul>
+        <li>"It used camelCase for variables — that's the skill talking."</li>
+        <li>"It added try/catch to every handler — we didn't ask, but the skill says to."</li>
+        <li>"It used parameterized queries — the security rule from the skill."</li>
+      </ul>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 3 — Show the "before and after" (if time allows):</strong></p>
+      <p>Delete the skill, restart Claude (<code>/clear</code>), ask for the same route. Compare the output. "Without the skill, Claude makes its own choices. They're fine, but they might not match your team's standards."</p>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key idea</div>
+        Skills are how you scale consistency. One developer writes the coding standards once. Every developer on the team gets them automatically. Claude follows them without anyone having to remember to paste the rules.
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-label">Commands vs skills vs CLAUDE.md</div>
+        <strong>CLAUDE.md</strong> — always loaded, universal project info (tech stack, build commands, top-level rules).<br>
+        <strong>Skills</strong> — loaded when relevant, based on the description field (coding standards, security checklist, deployment guide).<br>
+        <strong>Commands</strong> — never auto-loaded, triggered by the user with <code>/name</code> (workflows, checklists, generators).
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCISE 2 -->
+  <div class="segment" data-time="15:35">
+    <div class="segment-header">
+      <span class="segment-tag tag-exercise">Exercise</span>
+      <span class="segment-title">Write a Skill</span>
+      <span class="segment-dur">7 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Write a skill for something you'd want Claude to always know about this project. Here are some ideas."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Option A — Security checklist</span>Create .claude/skills/security-checklist.md
+
+Write rules about SQL injection prevention,
+input validation, output escaping, and error
+message hygiene. Include the frontmatter with
+a description field.</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option B — Testing conventions</span>Create .claude/skills/testing-guide.md
+
+Write rules about how tests should be structured:
+what to name test files, how to set up/tear down
+the database, what assertions to use, how to
+organize test cases.</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option C — Let Claude write it</span>look at the BookBuddy codebase and create a skill
+file at .claude/skills/architecture.md that
+describes the project architecture, key patterns,
+and conventions you can infer from the existing code.
+include the frontmatter with a description field.</div>
+
+      <p><strong>After they create it:</strong> "Test it — ask Claude to do something that your skill covers. See if it follows the rules."</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 3: HOOKS -->
+  <div class="segment" data-time="15:42">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Hooks: Automated Guardrails</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Commands are things you trigger. Skills are things Claude reads. Hooks are things that happen automatically — shell commands that fire when Claude does something. No human in the loop."</p>
+
+      <p><strong>Hook events:</strong></p>
+      <ul>
+        <li><code>PreToolUse</code> — runs before Claude uses a tool (can block it)</li>
+        <li><code>PostToolUse</code> — runs after a tool completes (can add feedback)</li>
+        <li><code>Notification</code> — runs when Claude sends a notification</li>
+      </ul>
+
+      <p><strong>Step 1 — Create a simple hook:</strong></p>
+
+      <p>"Let's add a hook that checks for stray console.log statements every time Claude edits a file."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>create a .claude/settings.json file with a PostToolUse hook that runs after Edit or Write tool calls. the hook should grep for console.log in the routes/ directory and warn if any are found (excluding the server startup log).</div>
+
+      <p><strong>Show the result:</strong></p>
+
+      <div class="file-card">
+{
+  <span class="key">"hooks"</span>: {
+    <span class="key">"PostToolUse"</span>: [
+      {
+        <span class="key">"matcher"</span>: <span class="string">"Edit|Write"</span>,
+        <span class="key">"command"</span>: <span class="string">"grep -rn 'console\\.log' routes/ --include='*.js' | grep -v 'BookBuddy running' || true"</span>,
+        <span class="key">"description"</span>: <span class="string">"Check for stray console.log after file edits"</span>
+      }
+    ]
+  }
+}
+      </div>
+
+      <p><strong>Point out the structure:</strong></p>
+      <ul>
+        <li><code>matcher</code> — which tool triggers this hook (regex pattern)</li>
+        <li><code>command</code> — the shell command to run</li>
+        <li><code>description</code> — human-readable label</li>
+      </ul>
+
+      <p><strong>Step 2 — Trigger it:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>add a console.log("debug test") to routes/books.js at the top of the list handler</div>
+
+      <p>"Watch the bottom of Claude's output — after it edits the file, the hook fires and shows the console.log it just added. Claude sees that output and can react to it."</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 3 — A more powerful hook: lint on save</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Concept — don't need to build live</span>{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "npx eslint --fix $TOOL_INPUT_FILE_PATH 2>/dev/null || true",
+        "description": "Auto-format edited files"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "echo '$TOOL_INPUT' | grep -qE 'rm -rf|DROP TABLE|--force' && echo 'BLOCKED: destructive command detected' && exit 1 || true",
+        "description": "Block destructive shell commands"
+      }
+    ]
+  }
+}</div>
+
+      <p><strong>Point out:</strong></p>
+      <ul>
+        <li>"<code>PreToolUse</code> hooks can BLOCK the action. Exit code 1 = Claude doesn't run the tool. That's a guardrail."</li>
+        <li>"<code>$TOOL_INPUT_FILE_PATH</code> and <code>$TOOL_INPUT</code> are variables the hook receives — the file being edited or the command being run."</li>
+        <li>"This is the same idea as git hooks or CI checks, but it runs during your Claude session, not after."</li>
+      </ul>
+
+      <div class="callout pitfall">
+        <div class="callout-label">Watch out</div>
+        Hooks run on every matching tool call. A slow hook (like running the full test suite on every edit) will make Claude feel sluggish. Keep hooks fast — grep, lint a single file, check one thing. Save the heavy checks for commands like <code>/preflight</code>.
+      </div>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key idea</div>
+        Hooks are guardrails that don't require discipline. You don't have to remember to check for console.logs or run the linter — it happens automatically. That's the difference between "we have a rule" and "we enforce a rule."
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 4: PUTTING IT TOGETHER -->
+  <div class="segment" data-time="15:52">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Putting It All Together</span>
+      <span class="segment-dur">5 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Let's see how these three layers compose into a real workflow."</p>
+
+      <p><strong>Scenario: A new developer joins the team.</strong></p>
+      <ol style="padding-left: 1.25rem; margin-bottom: 0.75rem;">
+        <li>They clone the repo. The <strong>CLAUDE.md</strong> tells Claude what the project is and how to build it.</li>
+        <li>They start coding. <strong>Skills</strong> automatically load the coding standards and security checklist — Claude follows them without being told.</li>
+        <li>They type <code>/add-route users</code>. The <strong>command</strong> scaffolds a new route following the team's pattern.</li>
+        <li>Claude edits files. The <strong>hook</strong> checks for console.logs and auto-formats the code.</li>
+        <li>They type <code>/preflight</code>. The <strong>command</strong> runs the full checklist before they commit.</li>
+      </ol>
+
+      <p>"Zero onboarding conversation. Zero 'hey, what's our convention for X?' Slack messages. The workflow is in the repo."</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>When to use which:</strong></p>
+
+      <table style="width:100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 0.75rem;">
+        <tr style="border-bottom: 2px solid var(--border); font-weight: 600;">
+          <td style="padding: 0.5rem 0;">I want Claude to...</td>
+          <td style="padding: 0.5rem 0;">Use</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0;">Do a specific task on demand</td>
+          <td style="padding: 0.5rem 0;">Command</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0;">Follow rules without being told</td>
+          <td style="padding: 0.5rem 0;">Skill (or CLAUDE.md)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0;">Run a check automatically on events</td>
+          <td style="padding: 0.5rem 0;">Hook</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem 0;">Know the basics about the project always</td>
+          <td style="padding: 0.5rem 0;">CLAUDE.md</td>
+        </tr>
+      </table>
+
+      <p><strong>Takeaway:</strong> "The real power of Claude Code isn't the one-off prompts — it's building a system that makes your whole team faster. Commands, skills, and hooks are how you get there. And since they're just files in your repo, they evolve with your codebase."</p>
+    </div>
+  </div>
+
+  <!-- Q&A -->
+  <div class="segment" data-time="15:57">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Q&A</span>
+      <span class="segment-dur">3 min</span>
+    </div>
+    <div class="segment-body">
+      <p>Common questions:</p>
+      <ul>
+        <li><strong>"Can I have personal commands that aren't in the repo?"</strong> — Yes, put them in <code>~/.claude/commands/</code> for global commands available in every project.</li>
+        <li><strong>"How many skills is too many?"</strong> — Claude uses the description to decide relevance, so more skills don't hurt. But keep each one focused — one topic per file.</li>
+        <li><strong>"Can hooks modify Claude's behavior?"</strong> — Hooks can print output that Claude sees and can react to, and PreToolUse hooks can block actions. But they can't change Claude's instructions directly.</li>
+        <li><strong>"Do these work in VS Code / the IDE extension?"</strong> — Yes, same files, same behavior. The <code>.claude/</code> directory works across all Claude Code interfaces.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- PREP CHECKLIST -->
+  <div class="overview">
+    <h2>Pre-Workshop Checklist</h2>
+    <div style="font-size: 0.92rem;">
+      <ul style="padding-left: 1.25rem;">
+        <li>BookBuddy repo on <code>main</code> — clean, no <code>.claude/</code> directory (you build it live)</li>
+        <li>Finished examples on <code>demo/commands-skills-hooks</code> branch if you need to bail and show pre-built versions</li>
+        <li>Test each command yourself — <code>/explain</code>, <code>/preflight</code>, <code>/add-route</code></li>
+        <li>Verify hooks fire correctly — add a console.log, see the hook report it</li>
+        <li>If short on time: skip Exercise 2 (skills) and show the pre-built version instead</li>
+        <li>If long on time: have attendees create a PreToolUse hook that blocks <code>rm -rf</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- BRANCH REFERENCE -->
+  <div class="overview">
+    <h2>Branch Reference</h2>
+    <div style="font-size: 0.92rem;">
+      <table style="width:100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600; width: 240px;">main</td>
+          <td style="padding: 0.5rem 0;">Clean app, no .claude/ directory — start here, build live</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem 0; font-weight: 600;">demo/commands-skills-hooks</td>
+          <td style="padding: 0.5rem 0;">Pre-built commands, skills, and hooks — fallback if demos run long</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div class="overview">
+    <h2>Quick Reference — File Locations</h2>
+    <div style="font-size: 0.92rem;">
+      <table style="width:100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600; width: 240px;"><code>.claude/commands/*.md</code></td>
+          <td style="padding: 0.5rem 0;">Project commands (shared via git)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600;"><code>~/.claude/commands/*.md</code></td>
+          <td style="padding: 0.5rem 0;">Personal global commands</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600;"><code>.claude/skills/*.md</code></td>
+          <td style="padding: 0.5rem 0;">Project skills (need <code>description:</code> frontmatter)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 0.5rem 0; font-weight: 600;"><code>.claude/settings.json</code></td>
+          <td style="padding: 0.5rem 0;">Project hooks (shared via git)</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem 0; font-weight: 600;"><code>~/.claude/settings.json</code></td>
+          <td style="padding: 0.5rem 0;">Personal global hooks</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
