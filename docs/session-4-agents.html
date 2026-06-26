@@ -1,0 +1,752 @@
+<title>Workshop Script — Building Agents That Work for You</title>
+<meta name="description" content="Session 4 workshop script for the Claude Code Summit — orchestrating subagents with commands and role skills">
+<style>
+  :root {
+    --ground: #F7F5F0;
+    --text: #1A1D23;
+    --accent: #C45D2C;
+    --blue: #2D5A7B;
+    --muted: #6B6E75;
+    --card: #FFFFFF;
+    --border: #E2DFD8;
+    --code-bg: #EDEAE3;
+    --tip-bg: #FFF8F0;
+    --exercise-bg: #F0F6FA;
+    --pitfall-bg: #FFF0F0;
+    --green-bg: #F0F8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--ground);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .header {
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .header-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-meta {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .header-meta span { margin-right: 1.5rem; }
+
+  .overview {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .overview h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: 70px 1fr 60px;
+    gap: 0.25rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .timeline-time { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .timeline-dur { color: var(--muted); text-align: right; font-size: 0.85rem; }
+
+  .segment {
+    margin-bottom: 2rem;
+    border-left: 3px solid var(--border);
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .segment::before {
+    content: attr(data-time);
+    position: absolute;
+    left: -1.5rem;
+    top: 0;
+    transform: translateX(calc(-100% - 0.75rem));
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .segment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .segment-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .tag-demo { background: #E8F0E8; color: #2D5F2D; }
+  .tag-exercise { background: var(--exercise-bg); color: var(--blue); }
+  .tag-talk { background: #F0ECE4; color: #5C5440; }
+  .tag-hands-on { background: #F0E8F4; color: #5C3D6E; }
+
+  .segment-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .segment-dur {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .segment-body { font-size: 0.92rem; }
+  .segment-body p { margin-bottom: 0.75rem; }
+  .segment-body ul, .segment-body ol { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .segment-body li { margin-bottom: 0.35rem; }
+  .segment-body li::marker { color: var(--muted); }
+  .segment-body strong { font-weight: 600; }
+
+  .prompt {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .prompt-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .callout {
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.88rem;
+  }
+
+  .callout-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .tip { background: var(--tip-bg); border-left: 3px solid var(--accent); }
+  .tip .callout-label { color: var(--accent); }
+
+  .pitfall { background: var(--pitfall-bg); border-left: 3px solid #C44; }
+  .pitfall .callout-label { color: #C44; }
+
+  .reveal { background: var(--green-bg); border-left: 3px solid #2D7D2D; }
+  .reveal .callout-label { color: #2D7D2D; }
+
+  .file-card {
+    background: var(--text);
+    color: #D4D0C8;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .file-card .path { color: #7EB8DA; }
+  .file-card .comment { color: #6B7D6B; }
+  .file-card .key { color: #C9A06C; }
+  .file-card .string { color: #98C379; }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .concept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .concept-card h4 {
+    font-size: 0.9rem;
+    color: var(--blue);
+    margin-bottom: 0.35rem;
+  }
+
+  .concept-card p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .pipeline-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1rem 0;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+  }
+
+  .pipeline-step {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .pipeline-step strong {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--blue);
+  }
+
+  .pipeline-step span {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .pipeline-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    padding: 0 0.35rem;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  @media (max-width: 700px) {
+    .page { padding: 1.25rem 1rem 3rem; }
+    .header h1 { font-size: 1.5rem; }
+    .segment::before { display: none; }
+    .segment { padding-left: 1rem; }
+    .timeline { grid-template-columns: 60px 1fr 50px; font-size: 0.85rem; }
+    .concept-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .page { max-width: none; padding: 0; }
+    .segment { break-inside: avoid; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="header">
+    <div class="header-eyebrow">Claude Code Summit</div>
+    <h1>Building Agents That Work for You</h1>
+    <div class="header-meta">
+      <span>Tucker Kidd</span>
+      <span>9:15 – 10:45</span>
+      <span>Workshop</span>
+    </div>
+  </header>
+
+  <!-- BIG PICTURE -->
+  <div class="overview">
+    <h2>The Idea</h2>
+    <p style="font-size: 0.92rem; margin-bottom: 1rem;">Real development has phases — write the code, test it, review it. Each phase needs different expertise and different constraints. This session is about writing a single command that runs a multi-phase pipeline, where each phase has its own role definition.</p>
+    <p style="font-size: 0.92rem; margin-bottom: 1rem;">No SDK. No framework. Just markdown files orchestrating markdown files.</p>
+    <div class="pipeline-flow">
+      <div class="pipeline-step"><strong>Code Writer</strong><span>Implement the feature</span></div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-step"><strong>Test Writer</strong><span>Write tests for the diff</span></div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-step"><strong>Run Tests</strong><span>Fix if failing</span></div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-step"><strong>Reviewer</strong><span>Check &amp; polish</span></div>
+    </div>
+  </div>
+
+  <!-- RUN OF SHOW -->
+  <div class="overview">
+    <h2>Run of Show</h2>
+    <div class="timeline">
+      <span class="timeline-time">9:15</span><span>The mental model — what are agents, why orchestrate them</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">9:25</span><span>Demo 1 — Build <code>/build-feature</code> live, run it on a small task</span><span class="timeline-dur">15 min</span>
+      <span class="timeline-time">9:40</span><span>Exercise 1 — Write your own orchestrating command</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">9:50</span><span>Demo 2 — Role skills, context passing, failure handling</span><span class="timeline-dur">15 min</span>
+      <span class="timeline-time">10:05</span><span>Exercise 2 — Build a role skill, wire it into your pipeline</span><span class="timeline-dur">10 min</span>
+      <span class="timeline-time">10:15</span><span>Open experimentation — build your own pipeline</span><span class="timeline-dur">25 min</span>
+      <span class="timeline-time">10:40</span><span>Wrap-up &amp; takeaways</span><span class="timeline-dur">5 min</span>
+    </div>
+  </div>
+
+  <!-- PREREQUISITE -->
+  <div class="overview">
+    <h2>Prerequisite</h2>
+    <p style="font-size: 0.88rem; color: var(--muted);">This session builds on <em>Commands, Skills, and Hooks</em>. Attendees should know how to create <code>.claude/commands/</code> and <code>.claude/skills/</code> files. If anyone missed that session, the <code>demo/agents</code> branch has working examples they can reference.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 0: MENTAL MODEL -->
+  <div class="segment" data-time="9:15">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">The Mental Model</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "In the earlier sessions you talked to one Claude doing one thing. But real development workflows have phases — write the code, test it, review it. Each phase needs different expertise and different instructions. This session is about writing a single command that runs a multi-phase pipeline, where each phase has its own role definition."</p>
+
+      <p><strong>Three concepts, one sentence each:</strong></p>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <h4>Roles</h4>
+          <p>A skill file that defines how Claude should behave for a specific job. Just markdown in <code>.claude/skills/roles/</code>.</p>
+        </div>
+        <div class="concept-card">
+          <h4>Orchestrator</h4>
+          <p>A slash command that sequences the roles: "do X as the code writer, then Y as the test writer, then Z as the reviewer."</p>
+        </div>
+        <div class="concept-card">
+          <h4>Context Passing</h4>
+          <p>Phases communicate through the code on disk and <code>git diff</code>. No plumbing required.</p>
+        </div>
+      </div>
+
+      <p><strong>The "aha" moment:</strong></p>
+      <p>"You already know how to write commands and skills from the last session. An agent pipeline is just a command that references skills in sequence. There's no new syntax, no SDK, no framework — it's markdown files orchestrating markdown files."</p>
+
+      <p><strong>Why roles matter — separation of concerns:</strong></p>
+      <p>"When you ask Claude to 'build a feature and write tests and review it,' everything bleeds together. The code writer adds tests mid-feature. The reviewer starts refactoring. Roles are <em>constraints</em> — the code writer doesn't write tests, the test writer doesn't touch production code, the reviewer doesn't add features. That's what makes the pipeline reliable."</p>
+
+      <p><strong>Where everything lives:</strong></p>
+      <div class="file-card"><span class="path">.claude/</span>
+├── <span class="path">commands/</span>
+│   └── build-feature.md    <span class="comment"># the orchestrator</span>
+└── <span class="path">skills/</span>
+    └── <span class="path">roles/</span>
+        ├── code-writer.md  <span class="comment"># role definition</span>
+        ├── test-writer.md  <span class="comment"># role definition</span>
+        └── reviewer.md     <span class="comment"># role definition</span></div>
+
+      <div class="callout tip">
+        <div class="callout-label">Framing</div>
+        "Think of it like a code review pipeline at your company. A developer writes the code, a CI system runs the tests, a reviewer checks the PR. Same phases — we're just defining each role in a file and letting one command run the whole thing."
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 1: DEMO 1 -->
+  <div class="segment" data-time="9:25">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Build <code>/build-feature</code> Live</span>
+      <span class="segment-dur">15 min</span>
+    </div>
+    <div class="segment-body">
+
+      <p><strong>Say:</strong> "Let's build a pipeline from scratch. We're going to create three role files and one command that sequences them. The task: add a <code>/health</code> endpoint to BookBuddy."</p>
+
+      <p><strong>Step 1 — Create the role skills (do this live):</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>create the directory .claude/skills/roles/ and create three files in it:
+
+1. code-writer.md with this content:
+---
+description: Code writer role — implements features following existing patterns
+---
+# Code Writer Role
+You are a code writer. Your ONLY job is to write production code.
+## Rules
+- Follow existing patterns — look at how other routes are structured before writing yours
+- Use the same error handling style as existing routes
+- Never write tests — that's not your job
+- Never refactor unrelated code — stay focused on the task
+
+2. test-writer.md with this content:
+---
+description: Test writer role — writes tests for new code using Node test runner
+---
+# Test Writer Role
+You are a test writer. Your ONLY job is to write tests.
+## Rules
+- Run git diff to see what changed — write tests for THOSE changes, nothing else
+- Use the built-in Node.js test runner (node:test), no external frameworks
+- Cover the happy path and at least one edge case
+- Never modify production code — if something looks broken, note it but don't fix it
+
+3. reviewer.md with this content:
+---
+description: Code reviewer role — reviews changes for bugs and pattern violations
+---
+# Reviewer Role
+You are a code reviewer. Your ONLY job is to review.
+## Rules
+- Look at all uncommitted changes (git diff)
+- Check for: bugs, missing error handling, inconsistency with existing patterns
+- If you find issues, fix them
+- If the code is clean, say LGTM and summarize what was built</div>
+
+      <p><strong>Point out two things as Claude creates them:</strong></p>
+      <ul>
+        <li>"Each role says what it does <em>and what it doesn't do</em>. The code writer never writes tests. The test writer never touches production code. Constraints are the whole point."</li>
+        <li>"These are just skill files — same thing we built in the last session. Nothing new here yet."</li>
+      </ul>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 2 — Create the orchestrator command:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>create .claude/commands/build-feature.md with this content:
+
+Build this feature: $ARGUMENTS
+
+Follow this pipeline — complete each phase fully before moving to the next:
+
+Phase 1 — Code Writer:
+Read .claude/skills/roles/code-writer.md and follow those rules. Implement the feature.
+
+Phase 2 — Test Writer:
+Read .claude/skills/roles/test-writer.md and follow those rules. Write tests for what you just built.
+
+Phase 3 — Validate:
+Run the tests with `node --test`. If any fail, fix the issue and re-run. Repeat up to 3 times.
+
+Phase 4 — Reviewer:
+Read .claude/skills/roles/reviewer.md and follow those rules. Review all changes.</div>
+
+      <p><strong>Point out:</strong></p>
+      <ul>
+        <li>"<code>$ARGUMENTS</code> — whatever you type after <code>/build-feature</code> gets inserted here."</li>
+        <li>"Each phase reads a different skill file. That's the role switch."</li>
+        <li>"The 'up to 3 times' in Phase 3 is a circuit breaker. Without it, Claude could loop forever."</li>
+      </ul>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <p><strong>Step 3 — Run it:</strong></p>
+
+      <div class="prompt">
+        <span class="prompt-label">Type in Claude Code</span>/build-feature add a GET /health endpoint that returns JSON { status: "ok" }</div>
+
+      <p><strong>As it runs, narrate:</strong></p>
+      <ul>
+        <li>"Phase 1 — it read the code-writer role, looked at the existing routes for patterns, and wrote a minimal health route. Notice it didn't add tests."</li>
+        <li>"Phase 2 — it read the test-writer role, ran <code>git diff</code> to see what changed, and wrote tests for just the health endpoint."</li>
+        <li>"Phase 3 — it's running the tests. If they pass, it moves on. If not, it'd fix and retry."</li>
+        <li>"Phase 4 — it read the reviewer role and is checking the diff for issues."</li>
+      </ul>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key moment</div>
+        "One command. Four phases. Three different roles. The task was 'add a health endpoint' and we got implementation, tests, validation, and review — all from typing one line."
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-label">If it takes too long</div>
+        The <code>/health</code> endpoint is intentionally tiny. If Claude is slow, that's fine — narrate what it's doing at each phase. The audience is watching the <em>structure</em>, not the speed.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EXERCISE 1 -->
+  <div class="segment" data-time="9:40">
+    <div class="segment-header">
+      <span class="segment-tag tag-exercise">Exercise</span>
+      <span class="segment-title">Write Your Own Orchestrating Command</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Your turn. Build an orchestrating command that sequences at least two roles. Here are some ideas — or make up your own."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Option A — /fix-bug</span>Create .claude/commands/fix-bug.md
+
+A pipeline that debugs, fixes, and validates:
+1. Investigator role — find the root cause, don't change code
+2. Fixer role — implement the minimal fix
+3. Test writer role — write a regression test
+4. Run the tests</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option B — /refactor</span>Create .claude/commands/refactor.md
+
+A pipeline that refactors safely:
+1. Analyst role — identify what to change and what could break
+2. Refactorer role — make the changes
+3. Run existing tests to confirm nothing broke
+4. Reviewer role — verify the refactor is actually simpler</div>
+
+      <div class="prompt">
+        <span class="prompt-label">Option C — /add-route (upgrade)</span>Upgrade the /add-route command from the last session
+into a pipeline:
+1. Code writer role — scaffold the route
+2. Test writer role — write tests
+3. Run the tests</div>
+
+      <p><strong>After 7 minutes:</strong> "If you haven't run it yet, that's fine — getting the structure right is the goal. You can test with a tiny task like 'add a 404 handler' or 'add input validation to the create-book route.'"</p>
+
+      <div class="callout tip">
+        <div class="callout-label">What to check for as you circulate</div>
+        Did they split work into distinct roles? Does each role have constraints (what NOT to do)? Did they include a validation step?
+      </div>
+
+      <p><strong>Fallback:</strong> The <code>demo/agents</code> branch has working examples if anyone is stuck.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 2: DEMO 2 -->
+  <div class="segment" data-time="9:50">
+    <div class="segment-header">
+      <span class="segment-tag tag-demo">Demo</span>
+      <span class="segment-title">Richer Roles, Context Passing, Failure Handling</span>
+      <span class="segment-dur">15 min</span>
+    </div>
+    <div class="segment-body">
+
+      <p><strong>Say:</strong> "The pipeline we built works, but the roles are pretty bare. Let's make them smarter. Three patterns that make pipelines reliable."</p>
+
+      <!-- PATTERN 1 -->
+      <p><strong>Pattern 1: Richer role skills (5 min)</strong></p>
+
+      <p>"Let's upgrade the code-writer role from 'follow existing patterns' to something with real preparation steps."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Prompt</span>update .claude/skills/roles/code-writer.md — add a "Before you write" section:
+- Read the existing route files to understand the project's patterns
+- Check the database schema in db/schema.sql
+- Look at how errors are handled in existing routes
+
+And an "After you write" section:
+- Run the app with npm start and verify your endpoint works with curl
+- Stage your changes with git add</div>
+
+      <p><strong>Point out:</strong> "The role isn't just 'be a code writer.' It tells Claude how to <em>prepare</em> before writing and how to <em>verify</em> after. Each role becomes a checklist."</p>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <!-- PATTERN 2 -->
+      <p><strong>Pattern 2: Context passing via the filesystem (5 min)</strong></p>
+
+      <p><strong>Say:</strong> "How does the test writer know what the code writer built? How does the reviewer know what changed?"</p>
+
+      <p>"It checks <code>git diff</code>. The filesystem IS the context bus. You don't need to pass variables between phases — the code on disk is the shared state."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Show this addition to test-writer.md</span>## Before writing tests
+Run `git diff` to see exactly what changed. Write tests for
+THOSE changes, nothing else. Don't test existing code that
+wasn't modified.</div>
+
+      <p><strong>Point out:</strong> "No special plumbing. No passing objects between agents. Phase 2 reads what Phase 1 wrote. Phase 4 reads what Phase 2 and 3 changed. Git is the communication layer."</p>
+
+      <div class="callout reveal">
+        <div class="callout-label">Key idea</div>
+        The filesystem is your context bus. Every phase reads the current state of the code and the diff. That's all you need.
+      </div>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--border);">
+
+      <!-- PATTERN 3 -->
+      <p><strong>Pattern 3: Failure handling and circuit breakers (5 min)</strong></p>
+
+      <p><strong>Say:</strong> "What happens when the tests fail? Right now our command says 'repeat up to 3 times.' Let's make that smarter."</p>
+
+      <div class="prompt">
+        <span class="prompt-label">Upgrade the validate phase in build-feature.md</span>Phase 3 — Validate:
+Run the tests with `node --test`. If any fail:
+  a. Read the failure output carefully
+  b. Determine if it's a production code bug or a test bug
+  c. Fix the right one (go back to the code-writer role
+     if it's production code, or the test-writer role
+     if it's a test bug)
+  d. Re-run the tests
+  e. Repeat up to 3 times. If still failing after 3 attempts,
+     stop and report: what's failing, what you tried, and
+     what you think the root cause is.</div>
+
+      <p><strong>Point out:</strong></p>
+      <ul>
+        <li>"Step (b) is the key — it's not just 'try again,' it's 'diagnose first.' Is the code wrong or is the test wrong?"</li>
+        <li>"Step (c) switches back to the right role. The fixer follows the code-writer constraints. Roles persist even in the retry loop."</li>
+        <li>"The '3 times then stop and report' is the circuit breaker. Always set a bound. Without it, you burn tokens and get nowhere."</li>
+      </ul>
+
+      <div class="callout pitfall">
+        <div class="callout-label">Common mistake</div>
+        Retry loops without a bound. "Fix and re-run until tests pass" sounds reasonable but can run indefinitely if there's a deeper issue. Always cap retries and have a fallback behavior (stop and report).
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EXERCISE 2 -->
+  <div class="segment" data-time="10:05">
+    <div class="segment-header">
+      <span class="segment-tag tag-exercise">Exercise</span>
+      <span class="segment-title">Build a Richer Role, Wire It In</span>
+      <span class="segment-dur">10 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Take the command you built in Exercise 1. Pick one of the roles and make it richer — add preparation steps, constraints, and self-verification. Then test your pipeline on a small task."</p>
+
+      <p><strong>Things to try:</strong></p>
+      <ul>
+        <li>Add a "Before you start" section — what should the role read first? What patterns should it follow?</li>
+        <li>Add an "After you're done" self-check — run tests, curl the endpoint, check the diff looks clean</li>
+        <li>Add a scope constraint — "don't modify files outside of <code>routes/</code>"</li>
+        <li>Add a retry rule to the validation phase with a bound</li>
+      </ul>
+
+      <p><strong>Small tasks to test on (cheap, fast):</strong></p>
+      <ul>
+        <li>Add a <code>GET /books/:id/reviews</code> endpoint</li>
+        <li>Add input validation to an existing route</li>
+        <li>Add a 404 handler for unknown routes</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-label">What to look for</div>
+        Does the richer role actually change Claude's behavior vs the bare-bones version? The "Before you start" section should make Claude do research before writing. The constraints should prevent it from going off-script.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SEGMENT 3: OPEN EXPERIMENTATION -->
+  <div class="segment" data-time="10:15">
+    <div class="segment-header">
+      <span class="segment-tag tag-hands-on">Hands-on</span>
+      <span class="segment-title">Open Experimentation</span>
+      <span class="segment-dur">25 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "You've got 25 minutes. Build something. Here are some ideas at different levels — or go completely off-script."</p>
+
+      <p><strong>Level 1 — Extend your pipeline:</strong></p>
+      <ul>
+        <li>Add a fifth phase: a documentation writer that updates the README based on what was built</li>
+        <li>Add a security checker role between the code writer and test writer</li>
+        <li>Make the reviewer more specific — give it a checklist of things to look for</li>
+      </ul>
+
+      <p><strong>Level 2 — Build a new pipeline from scratch:</strong></p>
+      <ul>
+        <li><code>/investigate</code> — researcher reads the codebase and writes a summary, analyst identifies top 3 improvements, planner writes a plan</li>
+        <li><code>/security-audit</code> — scanner checks for common issues (SQL injection, missing validation), reporter writes a summary with severity ratings</li>
+      </ul>
+
+      <p><strong>Level 3 — Bring your own project:</strong></p>
+      <ul>
+        <li>If you have a repo on your laptop, point Claude at it and build a pipeline that fits your actual workflow</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-label">As you circulate</div>
+        Common sticking points: roles that are too vague ("be a good reviewer" — help them add specific constraints), commands that try to do too much in one run (help them scope down), and forgetting the circuit breaker on retry loops.
+      </div>
+
+      <p><strong>At 10:35 (5-minute warning):</strong> Ask 1–2 people to share what they built. What roles did they define? What constraints worked well? Did anything surprise them?</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- WRAP-UP -->
+  <div class="segment" data-time="10:40">
+    <div class="segment-header">
+      <span class="segment-tag tag-talk">Talk</span>
+      <span class="segment-title">Wrap-up</span>
+      <span class="segment-dur">5 min</span>
+    </div>
+    <div class="segment-body">
+      <p><strong>Say:</strong> "Let's recap. You built agent pipelines today with zero frameworks, zero SDKs — just markdown files."</p>
+
+      <p><strong>Three takeaways:</strong></p>
+      <ol>
+        <li><strong>Roles are constraints, not capabilities.</strong> The power isn't telling Claude what to do — it's telling it what NOT to do. A code writer that doesn't write tests. A reviewer that doesn't add features. Separation of concerns via prompt.</li>
+        <li><strong>The filesystem is your context bus.</strong> Phases communicate through the code on disk and <code>git diff</code>. No variable passing, no state management, no plumbing.</li>
+        <li><strong>Always add a circuit breaker.</strong> Any loop needs a bound. "Retry up to 3 times, then stop and report." Without it, you burn tokens and get nowhere.</li>
+      </ol>
+
+      <p><strong>Close:</strong> "Everything you built today is committed to your repo. Your teammates can use these pipelines tomorrow without knowing how they work — they just type <code>/build-feature</code> and go."</p>
+
+      <div class="callout reveal">
+        <div class="callout-label">Where it goes from here</div>
+        "These patterns — roles, orchestration, context passing, failure handling — are the same patterns you'd use if you moved to the Claude Code SDK or built a full agent framework. The difference is scale, not shape. Start with markdown. Graduate when markdown isn't enough."
+      </div>
+    </div>
+  </div>
+
+</div>
