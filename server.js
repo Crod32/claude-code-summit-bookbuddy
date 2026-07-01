@@ -39,8 +39,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/books', require('./routes/books'));
 app.use('/reviews', require('./routes/reviews'));
+app.use('/', require('./routes/auth'));
 
 app.get('/', (req, res) => res.redirect('/books'));
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
